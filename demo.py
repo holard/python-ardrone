@@ -29,17 +29,18 @@ stream.
 
 
 import pygame
-
+import cv2
 import libardrone
 
 
 def main():
     pygame.init()
-    W, H = 320, 240
-    screen = pygame.display.set_mode((W, H))
+    W, H = 640, 320
+    screen = pygame.display.set_mode((W,H))
     drone = libardrone.ARDrone()
     clock = pygame.time.Clock()
     running = True
+    cam = cv2.VideoCapture('tcp://192.168.1.1:5555')
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -100,25 +101,28 @@ def main():
                 elif event.key == pygame.K_0:
                     drone.speed = 1.0
 
-        try:
-            surface = pygame.image.fromstring(drone.image, (W, H), 'RGB')
-            # battery status
-            hud_color = (255, 0, 0) if drone.navdata.get('drone_state', dict()).get('emergency_mask', 1) else (10, 10, 255)
-            bat = drone.navdata.get(0, dict()).get('battery', 0)
-            f = pygame.font.Font(None, 20)
-            hud = f.render('Battery: %i%%' % bat, True, hud_color)
-            screen.blit(surface, (0, 0))
-            screen.blit(hud, (10, 10))
-        except:
-            pass
+        running, cam_image = cam.read()
+        if running:
+            try:
+                cv2_image = cv2.cvtColor(cam_image, cv2.COLOR_BGR2RGB)
+                surface = pygame.surfarray.make_surface(cv2_image)
+                surface = pygame.transform.rotate(surface, -90)
+                surface = pygame.transform.flip(surface, True, False)
+                screen.blit(surface, (0, 0))
+            except:
+                pass
+        else:
+            # error reading frame
+            print 'error reading video feed'
 
         pygame.display.flip()
-        clock.tick(50)
-        pygame.display.set_caption("FPS: %.2f" % clock.get_fps())
+        clock.tick(30)
 
     print "Shutting down...",
     drone.halt()
     print "Ok."
+    cam.release()
+    cv2.destroyAllWindows()
 
 if __name__ == '__main__':
     main()
