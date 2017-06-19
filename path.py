@@ -5,8 +5,7 @@ import libardrone
 
 # Each pair in the path should be (<command>, <duration in milliseconds>)
 # Available commands: hover, forward, backward, left, right, up, down, turn_left, turn_right
-path = [("forward", 1500), ("hover", 1000), ("left", 1500), ("hover", 1000), 
-        ("backward", 1500), ("hover", 1000), ("right", 1500)]
+path = [("hover", 1000), ("turn_left", 1500), ("hover", 1000), ("turn_right", 1500), ("hover", 1000)]
 
 def main():
     drone = libardrone.ARDrone()
